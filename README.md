@@ -1,70 +1,91 @@
-# Getting Started with Create React App
+# formik vs react-hook-form
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 一、技术对比
 
-## Available Scripts
+[npmtrends对比](https://www.npmtrends.com/formik-vs-react-hook-form)
 
-In the project directory, you can run:
+![](https://i.loli.net/2020/12/01/xzlyRc3WOXLtoIu.png)
 
-### `yarn start`
+formik 用的人更多，可能因为出的早，知名度更高。
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+此外，在 https://bundlephobia.com/ 上可以查看库的依赖项。
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Formik具有7个依赖项，React Hook Form没有依赖。库具有的依存关系越少越好。
 
-### `yarn test`
+## 二、性能对比
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+ A big difference between the two is that React Hook Form is designed to make use of uncontrolled components to avoid unnecessary re-rendering caused by user inputs.
 
-### `yarn build`
+Formik中，用户每输入一个字符都会重新渲染一次；而React Hook Form会等用户在整个输入框输入完后再重新渲染。
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+React Hook Form 胜
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 三、代码对比
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+使用下来，感觉主要有2点区别：
 
-### `yarn eject`
+1. Formik 提供了 \<Field>\<ErrorMessage> 等组件以供使用。React Hook Form 用的则是原生的 html标签，通过ref属性来进行校验。
+2. Formik 的代码不够简洁。一是对于每个表单项的检验都需要单独写一个函数；二是必须要设定initialValues。
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 四、与Yup集成
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Formik 与 Yup 的集成非常方便，可以直接通过validationSchema属性来指定。
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```react
+const SignupSchema = Yup.object().shape({
+    firstName: Yup.string()
+        .min(2, 'Too Short!')
+        .max(50, 'Too Long!')
+        .required('Required'),
+});
+...
+	<Formik
+         validationSchema={SignupSchema}
+            ...
+        >
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+而且之前 Formik 中对于每个表单项，都需要编写单独的函数来校验，现在不需要了，代码简洁了许多。
 
-## Learn More
+react-hook-form 与 Yup 集成，则需要添加新的依赖[@hookform/resolvers](https://github.com/react-hook-form/resolvers )
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```react
+import { yupResolver } from '@hookform/resolvers/yup';
+    const { register, handleSubmit, errors } = useForm({
+        // react-hook-form 默认是表单提交时校验，但也可以改成onBlur时校验
+        mode: 'onBlur',
+        // 老版本的 react-hook-form 内置了对于yup的集成，但新版本需要引入 yupResolver
+        resolver: yupResolver(SignupSchema)
+    });
+...
+                <div className="form-group">
+                    <input
+                        className="form-control"
+                        type="text"
+                        placeholder="firstName"
+                        name={"firstName"}
+                        ref={register}
+                    />
+                    {errors.firstName && errorMessage(errors.firstName.message)}
+                </div>
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+原本 react-hook-form 需要先判断 errors 的 type，才能正确显示报错信息。现在不需要了，代码简洁了一些。
 
-### Code Splitting
+但是每个表单项都需要写``ref={register}``,比较冗余，不能像Formik 那样在 form上指定。
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 五、其他
 
-### Analyzing the Bundle Size
+React Hook Form 有个 builder，可以自动生成代码，帮助小白快速上手。
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+ https://react-hook-form.com/form-builder/
 
-### Making a Progressive Web App
+## 六、总结
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+![](https://i.loli.net/2020/12/01/BLZXID1Cr82M95p.png)
 
-### Advanced Configuration
+React Hook Form is the winner.This by no means makes Formik a bad solution, and if you need a form solution that is still compatible with class components, Formik is the way to go since React Hook Form only supports functional components.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Unfortunately during development I realised that I cannot use react-hook-forms in some complex forms because there are some missing features (ie. arrays of arrays, dependencies between fields, not that good support of typescript ...). I would recommend you to use react-hook-forms if you need large and simple forms, otherwise use Formik.
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+React Hook Form 更轻量、性能更好、接口也更简单，而 Formik 功能更强大一点。
