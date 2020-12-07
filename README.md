@@ -25,7 +25,11 @@ React Hook Form 胜
 使用下来，感觉主要有2点区别：
 
 1. Formik 提供了 \<Field>\<ErrorMessage> 等组件以供使用。React Hook Form 用的则是原生的 html标签，通过ref属性来进行校验。
+
 2. Formik 的代码不够简洁。一是对于每个表单项的检验都需要单独写一个函数；二是必须要设定initialValues。
+  因为 Formik 使用的是 Controlled component，数据改变需要通知表单，所以必须设定initialValues。
+
+  而 React Hook Form 使用的是 unControlled component，无需通知表单。
 
 ## 四、与Yup集成
 
